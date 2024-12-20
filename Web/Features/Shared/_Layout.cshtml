@@ -1,0 +1,86 @@
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        @if (!string.IsNullOrEmpty(ViewData["Title"]?.ToString()))
+        {
+            @Html.Raw(ViewData["Title"] + " - ");
+        }
+        Status Center
+    </title>
+
+    <link rel="icon" href="/favicon.ico" />
+
+    @*base resets and grid*@
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/grid.css" asp-append-version="true" />
+
+    @* 3rd party libraries *@
+    <link rel="stylesheet" href="~/js/lib/select2/css/select2.min.css" type="text/css" />
+    <link rel="stylesheet" href="~/css/lib/FontAwesome/css/all.css" type="text/css" />
+    <link rel="stylesheet" href="~/js/lib/datatables/datatables.min.css" type="text/css" />
+    <link rel="stylesheet" href="~/js/lib/jqueryUI/jquery-ui-datepicker.min.css" type="text/css" />
+    <link rel="stylesheet" href="~/js/lib/timepicker/css/jquery.timepicker.min.css" type="text/css" />
+
+    <link rel="stylesheet" href="~/css/shared.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <div class="container nav__container">
+                <a class="nav__home" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/field-service-logo-transparent.png" alt="Status Center" />
+                    <h2 class="nav__heading">Status Center</h2>
+                </a>
+                <ul class="nav__list">
+                    <li class="nav__item">
+                        <a class="nav__link" asp-controller="LoadTimeValues" asp-action="Index">Load Time Value Export</a>
+                    </li>
+                </ul>
+                <a href="https://mes.essinc.com" class="manufacturingLink">
+                    <img src="~/images/ess-logo-white-small-cropped.png" alt="ESS Manufacturing">
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            @{
+                var adminGroup = Configuration["AdminGroup"] ?? "";
+                var userContext = UserHelper.GetUser(User.Identity.Name);
+            }
+            &copy; 2023 - Status Center <span ess-show-if="@User.IsInRole(adminGroup)"> | <a asp-controller="Admin" asp-action="Index">Admin</a></span> |
+            Logged in as: @userContext.DisplayName            
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="~/js/lib/jquery/jquery-3.6.0.js"></script>
+
+    @* 3rd party libraries *@
+    <script src="~/js/lib/select2/js/select2.full.js" type="text/javascript"></script>
+    <script src="~/js/lib/datatables/datatables.min.js" type="text/javascript"></script>
+    <script src="~/js/lib/dayjs/dayjs.min.js" type="text/javascript"></script>
+    <script src="~/js/lib/jqueryUI/jquery-ui-datepicker.min.js" type="text/javascript"></script>
+    <script src="~/js/lib/timepicker/js/jquery.timepicker.min.js" type="text/javascript"></script>
+
+    <script src="~/js/essTools.js" asp-append-version="true"></script>
+    <script src="~/js/tabs.js" asp-append-version="true"></script>
+    <script src="~/js/shared.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

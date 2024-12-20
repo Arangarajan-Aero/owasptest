@@ -1,0 +1,120 @@
+﻿@section Styles {
+    <link href="~/css/admin-index.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@{
+    ViewBag.Title = "Admin";
+}
+
+<h1>Admin</h1>
+<div class="row">
+    <div class="colLg__4">
+        <label>
+            <span class="labelText">Inverter 1 (IL|B)</span>
+            <input type="text" autocomplete="off" name="Inverter1" class="firmwareVersion__input" />
+        </label>
+        <label>
+            <span class="labelText">Inverter 2 (IL|B)</span>
+            <input type="text" autocomplete="off" name="Inverter2" class="firmwareVersion__input" />
+        </label>
+    </div>
+    <div class="colLg__4">
+        <label>
+            <span class="labelText">Converter 1 (IL|B)</span>
+            <input type="text" autocomplete="off" name="Converter1" class="firmwareVersion__input" />
+        </label>
+        <label>
+            <span class="labelText">Converter 2 (IL|B)</span>
+            <input type="text" autocomplete="off" name="Converter2" class="firmwareVersion__input" />
+        </label>
+    </div>
+    <div class="colLg__4">
+        <label>
+            <span class="labelText">UPS Converter 1 (IL|B)</span>
+            <input type="text" autocomplete="off" name="UPSConverter1" class="firmwareVersion__input" />
+        </label>
+        <label>
+            <span class="labelText">UPS Converter 2 (IL|B)</span>
+            <input type="text" autocomplete="off" name="UPSConverter2" class="firmwareVersion__input" />
+        </label>
+    </div>
+    <div class="colLg__4">
+        <label>
+            <span class="labelText">HVPC</span>
+            <input type="text" autocomplete="off" name="EL0114HVPCVersion" class="firmwareVersion__input" />
+        </label>
+        <label>
+            <span class="labelText">UPS Firmware Version</span>
+            <input type="text" autocomplete="off" name="EL0115UPSVersion" class="firmwareVersion__input" />
+        </label>
+    </div>
+    <div class="colLg__4">
+        <label>
+            <span class="labelText">CDM1</span>
+            <input type="text" autocomplete="off" name="EL0062CDM1Version" class="firmwareVersion__input" />
+        </label>
+        <label>
+            <span class="labelText">CDM2</span>
+            <input type="text" autocomplete="off" name="EL0062CDM2Version" class="firmwareVersion__input" />
+        </label>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="colLg__4">
+        <h2>AC (8)</h2>
+        <div class="row">
+            <div class="colLg__6">
+                <label>
+                    <span class="labelText">Version A</span>
+                    <input type="text" autocomplete="off" name="AC_VersionA" class="firmwareVersion__input" />
+                </label>
+            </div>
+            <div class="colLg__6">
+                <label>
+                    <span class="labelText">Version B</span>
+                    <input type="text" autocomplete="off" name="AC_VersionB" class="firmwareVersion__input" />
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="colLg__4">
+        <h2>DC (9)</h2>
+        <div class="row">
+            <div class="colLg__6">
+                <label>
+                    <span class="labelText">Version A</span>
+                    <input type="text" autocomplete="off" name="DC_VersionA" class="firmwareVersion__input" />
+                </label>
+            </div>
+            <div class="colLg__6">
+                <label>
+                    <span class="labelText">Version B</span>
+                    <input type="text" autocomplete="off" name="DC_VersionB" class="firmwareVersion__input" />
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="colLg__4">
+        <h2>EC (10?)</h2>
+        <div class="row">
+            <div class="colLg__6">
+                <label>
+                    <span class="labelText">Version A</span>
+                    <input type="text" autocomplete="off" name="EC_VersionA" class="firmwareVersion__input" />
+                </label>
+            </div>
+            <div class="colLg__6">
+                <label>
+                    <span class="labelText">Version B</span>
+                    <input type="text" autocomplete="off" name="EC_VersionB" class="firmwareVersion__input" />
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/admin-index.js" asp-append-version="true"></script>
+    }

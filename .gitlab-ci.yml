@@ -1,0 +1,201 @@
+variables:
+  BUILD_CONFIGURATION: 'Release'
+  DOTNET_VERSION: '8.0'
+  WEB_RELEASE_FOLDER: 'Web/bin/Release/net8.0-windows'
+  DATALAYER_RELEASE_FOLDER: 'DataLayer/bin/Release/net8.0-windows'
+  DEPLOY_FOLDER: 'D:/GitlabCI/Projects/StatusCenter/Builds'
+  DEPLOY_TARGET: "https://statuscenter-dev.essinc.com"
+  PUBLISH_PROFILE: "Web/Properties/PublishProfiles/FolderProfile.pubxml"
+  SONAR_HOST_URL: "https://sonarcloud.io"
+  SONAR_TOKEN: "9ba3eb2349b692a492bc60212bfafe3e326fc5a9"
+
+include:
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+
+stages:
+  - lint
+  - build
+  - owasp
+  - sonarqube
+  - quality_and_dependancy-scan
+  - quality_and_tests
+  - deploy
+  - validate_deployment
+  - dast
+
+before_script:
+  - echo "Setting up environment for .NET 8 build using PowerShell"
+
+lint:
+  stage: lint
+  tags:
+    - windows
+  script:
+    - echo "Running .NET format to check code style and formatting..."
+    - dotnet format --verify-no-changes Web/Web.csproj --report lint-report.html || echo "Linting issues detected."
+  allow_failure: true
+  artifacts:
+    paths:
+      - lint-report.html
+    expire_in: 1 week
+    name: "Lint Report"
+
+build:
+  stage: build
+  tags:
+    - windows
+  script:
+    - echo "Checking .NET SDK version..."
+    - dotnet --info
+    - echo "Restoring dependencies for the project..."
+    - dotnet restore Web/Web.csproj --configfile ./nuget.config
+    - echo "Building the project in $BUILD_CONFIGURATION mode..."
+    - dotnet build Web/Web.csproj --configuration $BUILD_CONFIGURATION
+  artifacts:
+    paths:
+      - Web/bin/Release/net8.0/
+    expire_in: 1 week
+
+owasp_scan:
+  stage: owasp
+  tags:
+    - windows
+  dependencies:
+    - build
+  variables:
+    DC_VERSION: "7.4.1"
+    DC_OUTPUT: "dependency-check-report.xml"
+  script:
+    - echo "Setting up OWASP Dependency-Check on Windows..."
+    - mkdir dependency-check
+    - curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v${DC_VERSION}/dependency-check-${DC_VERSION}-release.zip -o dependency-check.zip
+    - powershell -Command "Expand-Archive -Path dependency-check.zip -DestinationPath dependency-check"
+    - echo "Running OWASP Dependency-Check..."
+    - java -version
+    - dependency-check\dependency-check\bin\dependency-check.bat --scan . --format XML --out ${DC_OUTPUT} --project "StatusCenter"
+    - mv -Force ${DC_OUTPUT} C:\Temp
+
+  # artifacts:
+  #   paths:
+  #     - ${DC_OUTPUT}
+  #   reports:
+  #     dependency_scanning: ${DC_OUTPUT}
+  #   expire_in: 1 week
+
+sonarqube:
+  stage: sonarqube
+  tags:
+    - windows
+  dependencies:
+    - build
+    - owasp_scan
+  script:
+    - echo "Starting SonarQube scan..."
+    - dotnet tool install --global dotnet-sonarscanner  
+    - dotnet sonarscanner begin /k:ess-software_status-center /d:sonar.login=$SONAR_TOKEN /d:sonar.host.url=$SONAR_HOST_URL /d:sonar.dependencyCheck.reportPaths="C:\Temp\dependency-check-report.xml" /o:ess-software
+    - dotnet build Web/Web.csproj --configuration $BUILD_CONFIGURATION
+    - dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN
+    # - echo "Pushing OWASP report to SonarQube..."
+    # - dotnet sonarscanner begin /k:ess-software_status-center /d:sonar.login=$SONAR_TOKEN /d:sonar.host.url=$SONAR_HOST_URL /d:sonar.dependencyCheck.reportPaths="C:\Temp\dependency-check-report.json" /o:ess-software
+  allow_failure: true
+
+code_quality:
+  stage: quality_and_tests
+  tags:
+    - windows
+  dependencies:
+    - build
+  script:
+    - echo "Analyzing code quality..."
+    - powershell -Command "& { ./scripts/format-results.ps1 -InputFile 'build.log' -OutputFile 'gl-code-quality-report.json' }"
+  artifacts:
+    paths:
+      - gl-code-quality-report.json
+    reports:
+      codequality: gl-code-quality-report.json
+    expire_in: 1 week
+
+dependency_scan:
+  stage: quality_and_dependancy-scan
+  image:
+    name: registry.gitlab.com/gitlab-ci-utils/docker-dependency-check:latest
+    entrypoint: [""]
+  dependencies:
+    - build
+  script:
+    - >
+      /usr/share/dependency-check/bin/dependency-check.sh --scan "./" --format ALL
+      --project "$CI_PROJECT_NAME" --failOnCVSS 0
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - "./dependency-check-report.html"
+      - "./dependency-check-report.json"
+
+test:
+  stage: quality_and_tests
+  tags:
+    - windows
+  dependencies:
+    - build
+  script:
+    - dotnet test --results-directory $CI_PROJECT_DIR/cobertura --collect:"XPlat Code Coverage" --test-adapter-path:. --logger:"junit;LogFilePath=$CI_PROJECT_DIR/artifacts/{assembly}-test.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+    - cp $CI_PROJECT_DIR/cobertura/*/coverage.cobertura.xml $CI_PROJECT_DIR/cobertura/coverage.cobertura.xml
+    - dotnet tool install -g dotnet-reportgenerator-globaltool
+    - reportgenerator -reports:"$CI_PROJECT_DIR/cobertura/coverage.cobertura.xml" -targetdir:"$CI_PROJECT_DIR/coveragereport" -reporttypes:"Html"
+    - tar -cvf $CI_PROJECT_DIR/coveragereport.tar -C $CI_PROJECT_DIR coveragereport
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/artifacts/*.xml
+      - $CI_PROJECT_DIR/cobertura/coverage.cobertura.xml
+      - $CI_PROJECT_DIR/coveragereport.tar
+    reports:
+      junit:
+        - $CI_PROJECT_DIR/artifacts/*.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: $CI_PROJECT_DIR/cobertura/coverage.cobertura.xml
+    expire_in: 1 week
+
+deploy:
+  stage: deploy
+  tags:
+    - windows
+  script:
+    - "echo 'Setting up environment for IIS deployment using Windows Authentication...'"
+    - "powershell -ExecutionPolicy Bypass -File ./scripts/check-admin.ps1"
+    - "echo 'Checking for publish profile at $Env:PUBLISH_PROFILE...'"
+    - "powershell -Command \"if (!(Test-Path $Env:PUBLISH_PROFILE)) { Write-Error 'Publish profile not found at $Env:PUBLISH_PROFILE!' ; exit 1 }\""
+    - "echo 'BUILD_CONFIGURATION: $Env:BUILD_CONFIGURATION'"
+    - "echo 'Deploying using dotnet publish with MSDeploy and Windows Authentication...'"
+    - "dotnet publish Web/Web.csproj -p:PublishProfile=$Env:PUBLISH_PROFILE -p:UserName=$Env:IIS_USERNAME -p:Password=$Env:IIS_PASSWORD -c $BUILD_CONFIGURATION"
+  only:
+    - majorpaynepoc_dotnet8
+
+dast:
+  stage: dast
+  # Ensure the runner can pull Docker images and run Linux-based containers
+  image: registry.gitlab.com/gitlab-org/security-products/dast:latest
+  variables:
+    DAST_WEBSITE: $DEPLOY_TARGET
+    DAST_SKIP_TARGET_CHECK: "true"
+    DAST_FULL_SCAN_ENABLED: "true"
+  script:
+    - echo "Running DAST scan against $DAST_WEBSITE..."
+    - /analyze
+  allow_failure: true
+  artifacts:
+    reports:
+      dast: gl-dast-report.json
+    expire_in: 1 week
+
+
+validate_deployment:
+  stage: validate_deployment
+  tags:
+    - windows
+  script:
+    - echo "Validating deployment using curl..."
+    - powershell -Command "curl.exe -o response.txt -s -w '%{http_code}' $Env:DEPLOY_TARGET"
+    - powershell -Command "$status=(Invoke-WebRequest -Uri $Env:DEPLOY_TARGET -UseBasicParsing); $status.StatusCode | Out-File response.txt"

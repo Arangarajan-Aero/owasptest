@@ -1,0 +1,20 @@
+﻿@section Styles {
+    <link href="~/css/home-index.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@{
+    //ViewBag.Title = "";
+}
+<div class="spinner"><i style="-webkit-animation: fa-spin 1s infinite linear; animation: fa-spin 1s infinite linear;" class="fas fa-sync"></i></div>
+
+<div class="row">
+    <div class="colLg__12">
+        <table class="dataTable"></table>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/lib/datatables/datatables.buttons.html5.min.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/js/lib/datatables/jszip.min.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/js/home-index.js" asp-append-version="true"></script>
+}

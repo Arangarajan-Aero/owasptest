@@ -1,0 +1,39 @@
+﻿@section Styles {
+    <link href="~/css/loadTimeValues-index.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@{
+    ViewBag.Title = "Load Time Values Export";
+}
+
+<h1>Load Time Values Export</h1>
+<p>
+    This tool is designed to regenerate Load-Time values from a machine based on historical PI data. Generally it's only used for disaster recovery.
+</p>
+<div class="row">
+    <div class="colLg__12">
+        <div>
+            <label for="nowCheckbox">Last Valid Setting</label>
+            <input type="checkbox" id="nowCheckbox">
+        </div>
+        <br />
+        <label>
+            <input type="text" autocomplete="off" id="dateInput" placeholder="Select Date" class="form__input">
+            <input type="text" autocomplete="off" id="timeInput" placeholder="Select Time" class="form__input">
+            <input type="hidden" name="dateTimeInput" id="dateTimeInput">
+        </label>
+        <select class="units">
+            <option value="-1">Select a Unit</option>
+        </select>
+        <button class="goBtn btn">Go</button>
+        <button class="export btn" type="button">Export</button>
+        <button class="export__json btn" type="button">Export as JSON</button>
+        <table class="results"></table>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript" src="~/js/lib/datatables/datatables.buttons.html5.min.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/js/lib/datatables/jszip.min.js" asp-append-version="true"></script>
+    <script type="text/javascript" src="~/js/loadTimeValues-index.js" asp-append-goingversion="true"></script>
+}

@@ -1,0 +1,23 @@
+
+label {
+    position: relative;
+    margin-top: 10px;
+}
+
+.updating {
+    content: "-";
+    display: block;
+    height: 20px;
+    font-weight: bold;
+    position: absolute;
+    right: 10px;
+    top: 0;
+}
+
+
+    .updating.success {
+        color: #00FF21;
+    }
+
+@media only screen and (min-width: 768px) {
+}

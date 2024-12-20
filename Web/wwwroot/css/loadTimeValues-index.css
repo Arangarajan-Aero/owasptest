@@ -1,0 +1,22 @@
+.export {
+    display: none;
+}
+
+    .export.active {
+        display: inline-block;
+    }
+
+.export__json {
+    display: none;
+}
+
+    .export__json.active {
+        display: inline-block;
+    }
+
+@media only screen and (min-width: 768px) {
+}
+
+
+@media (prefers-color-scheme: dark) {
+}
